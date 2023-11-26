@@ -334,7 +334,7 @@ fn process_file(
         .write(false)
         .create(false)
         .open(input_file)?;
-    let reader = BufReader::with_capacity(1024 * 1024, MultiGzDecoder::new(input_file));
+    let reader = BufReader::new(input_file);
 
     let output_file = OpenOptions::new()
         .read(false)
@@ -342,14 +342,11 @@ fn process_file(
         .create(true)
         .truncate(true)
         .open(output_file)?;
-    let mut writer = BufWriter::with_capacity(
-        1024 * 1024,
-        GzEncoder::new(output_file, Compression::default()),
-    );
+    let mut writer = BufWriter::new(output_file);
 
     for line in reader.lines() {
-        let line = line.unwrap();
-        let mut data: Value = serde_json::from_str(&line).unwrap();
+        let line = line?;
+        let mut data: Value = serde_json::from_str(&line)?;
         let text = data["text"].as_str().unwrap();
 
         let newlines = if whole_document {
