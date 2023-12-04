@@ -7,17 +7,19 @@ Rulin's Update (11/26/2023)
 ---------------
 1. To read and write dataset in the `jsonl` format (e.g., the Pile), run `cargo build --release --bin jsonl` to compile and generate the binary executable file. Alternatively, run `cargo run --bin jsonl [args]` to compile and immediately run the executable.
 2. To read and write dataset in the `json.gz` format, use the default format or pass `--bin json-gz` instead.
+3. Accelerate the deduplication for multiple files by passing `threads`.
 
 Comands for the Pile deduplication:
 ```bash
 target/release/bff \
   --bloom-filter-file filter.bff \
-  --bloom-filter-size 120000000000 \
+  --bloom-filter-size 2147483648 \
   --expected-ngram-count 1000000000 \
-  --output-directory deduped/ \
-  /gscratch/zlab/data/pile/train/*.jsonl
+  --output-directory deduped_Github/ \
+  --threads 32 \
+  /gscratch/zlab/rulins/data/pile-domains/Github/*.jsonl
 ```
-Note: The suggested bloom filter size for one shard is 2147483648. We have 30 shards in the Pile dataset. So I chose a bloom filter size of 120000000000, i.e., around twice of the suggested size to achieve a good accuracy-efficiency trade-off.
+Note: The suggested bloom filter size for the 1000000000 expected ngram is 2147483648. I am not sure about how to properly set it to achieve a good accuracy-efficiency trade-off.
 
 Getting started
 ---------------
