@@ -1,14 +1,25 @@
-BFF -- Modified version for the Pile Deduplication
+BFF -- Forked Version for the Personal Projects
 ===
 
-The big friendly filter 😁
 
-Rulin's Update (11/26/2023)
----------------
+### Installation
 1. To read and write dataset in the `jsonl` format (e.g., the Pile), run `cargo build --release --bin jsonl` to compile and generate the binary executable file. Alternatively, run `cargo run --bin jsonl [args]` to compile and immediately run the executable.
 2. To read and write dataset in the `json.gz` format, use the default format or pass `--bin json-gz` instead.
 3. Accelerate the deduplication for multiple files by passing `threads`.
 
+Trouble-shooting: 
+1. if `cargo` isn't installed in your system, run 
+```bash
+sudo snap install rustup --classic  # install
+rustup default stable  # setup default configuration
+```
+2. if `cmake` isn't installed, run
+```bash
+sudo apt update
+sudo apt install cmake
+```
+
+### Usage
 Comands for the Pile deduplication:
 ```bash
 target/release/bff \
@@ -17,9 +28,56 @@ target/release/bff \
   --expected-ngram-count 1000000000 \
   --output-directory deduped_Github/ \
   --threads 32 \
-  /gscratch/zlab/rulins/data/pile-domains/Github/*.jsonl
+  $PATH_TO_PILE/Github/*.jsonl
 ```
 Note: The suggested bloom filter size for the 1000000000 expected ngram is 2147483648. I am not sure about how to properly set it to achieve a good accuracy-efficiency trade-off.
+
+### Choosing Hyperparameters
+
+#### How does Bloom filter work?
+
+A Bloom filter is a probabilistic data structure designed to test whether an element is a member of a set. It is very efficient in terms of space and time, but it allows for some possibility of false positives (indicating an element is in the set when it is not).
+
+A bloom filter starts as an array of bits, all set to 0, and several hash functions. When you add an item, it is processed by each hash function, each of which outputs an index to the bit array. The bits at these indices are set to 1. To check if an item is in the set, process it with the same hash functions. If all the bits at the resulting indices are 1, the items is **presumed** to be in the set. If any bit is 0, the item is **definitely not** in the set.
+
+#### Choosing the size of a Bloom filter.
+The key is to balance the trade-off between the space requirement and the false positive rate. There are two main factors:
+
+* `n`: The number of ngrams expected to be stored.
+* `m`: The size of the Bloom filter in bits.
+* `P`: The false positive probability, usually 0.01-0.02 is acceptable. 
+
+The number of hash functions `k` and the false possitive probability can be calculated as follows:
+
+$$
+k = \lceil \frac{m}{n} \ln 2 \rceil
+$$
+
+$$
+P = \left( 1 - \left( 1 - \frac{1}{m} \right)^{kn} \right)^k \
+% \approx \left( 1 - \frac{kn}{8m} \right)^k \
+% \approx \left( 1 - \frac{\ln 2}{n} \right)^k = 1
+$$
+
+
+The optimal filter size `m` is
+
+$$
+m = - \frac{n \ln P}{(\ln 2)^2}
+$$
+
+Here is a quick lookup table used for experiments in the Scaling experiments:
+
+| Num. Ngrams | False Possibility Rate | Bloom Filter Size in Bits| Bloom Filter Size in GB |
+|------------|------------|------------|------------|
+| 1400000000000 | 0.02 | 11399309000000 | 1424 |
+
+
+
+BFF
+=== 
+
+The big friendly filter 😁
 
 Getting started
 ---------------
