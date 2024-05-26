@@ -22,7 +22,7 @@ sudo apt install cmake
 ### Usage
 Comands for the Pile deduplication:
 ```bash
-target/release/bff \
+target/release/jsonl \
   --bloom-filter-file filter.bff \
   --bloom-filter-size 2147483648 \
   --expected-ngram-count 1000000000 \
@@ -68,11 +68,27 @@ $$
 
 Here is a quick lookup table used for experiments in the Scaling experiments:
 
-| Num. Ngrams | False Possibility Rate | Bloom Filter Size in Bits| Bloom Filter Size in GB |
-|------------|------------|------------|------------|
-| 1400000000000 | 0.02 | 11399309000000 | 1424 |
+| Domain | Num. Ngrams | False Possibility Rate | Bloom Filter Size in Bits| Bloom Filter Size in GB |
+|------------|------------|------------|------------|------------|
+| Full | 1400000000000 | 0.02 | 11399309000000 | 1424 |
+| PubMed | 6500000000 | 0.02 | 52925361687 | 6.6 |
 
 
+Example script:
+```bash
+SECONDS=0
+
+mkdir deduped_pubmed
+target/release/jsonl \
+  --bloom-filter-file filter.bff \
+  --bloom-filter-size 52925361687 \
+  --expected-ngram-count 6500000000 \
+  --output-directory deduped_pubmed/ \
+  --threads 64 \
+  /mnt/md-256k/massive_ds_data/full/pubmed/*.jsonl
+
+echo "The script took $SECONDS seconds to execute."
+```
 
 BFF
 === 

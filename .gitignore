@@ -2,3 +2,5 @@
 /.idea/
 /*.iml
 deduped/
+*.bff
+deduped*
